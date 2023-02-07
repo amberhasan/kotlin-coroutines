@@ -3,32 +3,30 @@ package com.example.myapplication
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import android.widget.TextView
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.*
 
 class MainActivity : AppCompatActivity() {
 
-    val TAG = "MainActivity"
+    private val TAG = "MainActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        GlobalScope.launch {
-            val networkCallAnswer = doNetworkCall()
-            val networkCallAnswer2 = doNetworkCall2()
-            Log.d(TAG, networkCallAnswer)
-            Log.d(TAG, networkCallAnswer2)
+        GlobalScope.launch(Dispatchers.IO) {
+            val answer = doNetworkCall()
+            Log.d(TAG, "Starting coroutine in thread ${Thread.currentThread().name}")
+
+            //this code will now be executed in the main thread
+            withContext(Dispatchers.Main) {
+                Log.d(TAG, "Setting text in thread ${Thread.currentThread().name}")
+                //Can update UI here with network call info, with main thread
+            }
         }
     }
 
-    //These both execute at the same time because they are called in the same coroutine.
-    //They both delay 3 seconds and then print at the same time.
-    suspend fun doNetworkCall(): String {
-        delay(3000L)
-        return "This is the answer"
-    }
-    suspend fun doNetworkCall2(): String {
+    private suspend fun doNetworkCall(): String {
         delay(3000L)
         return "This is the answer"
     }
