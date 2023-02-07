@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import kotlinx.coroutines.*
+import kotlin.system.measureTimeMillis
 
 class MainActivity : AppCompatActivity() {
 
@@ -12,22 +13,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val job = GlobalScope.launch(Dispatchers.Default) {
-            Log.d(TAG, "Starting long running calculation....")
-            withTimeout(3000L) {//will cancel job after 3 seconds.
-                for(i in 30..40) {
-                    if(isActive){ //must check if the job has been canceled; otherwise this job will be so busy and not notice
-                        Log.d(TAG, "Result for i = $i: ${fib(i)}")
-                    }
-                }
+        //suspend functions are synchronous by default.
+        //this will delay 3 seconds each and will actually delay 6 seconds.
+        GlobalScope.launch(Dispatchers.IO) {
+            val time = measureTimeMillis {
+                val answer1 = networkCall1()
+                val answer2 = networkCall2()
+                Log.d(TAG, "Answer1 is $answer1")
+                Log.d(TAG, "Answer2 is $answer2")
             }
-            Log.d(TAG, "Ending long running calculation...")
+            Log.d(TAG, "Requests took $time ms.")
         }
     }
 
-    fun fib(n: Int): Long {
-        return if(n==0) 0
-        else if(n==1) 1
-        else fib(n-1) + fib(n-2)
+    suspend fun networkCall1(): String {
+        delay(3000L)
+        return "Answer 1"
     }
+
+    suspend fun networkCall2(): String {
+        delay(3000L)
+        return "Answer 2"
+    }
+
 }
